@@ -1,4 +1,5 @@
 #!/bin/python
+import os
 import argparse
 import sys
 import yaml
@@ -22,7 +23,22 @@ def extractAttributes(params, attributes):
     return out
 
 def run(infile, outfile=None):
+    """
+    Run the home assistant simplified snmp outputer.
+
+    :param infile: the simplified snmp yaml
+    :param outfile: the snmp output to give to home assistant. If not specified push to stdout.
+    :rtype: int
+
+    Returns 1 if the outfile is changed, 0 if not. If stdout return is always 1
+    """
+    
     itemAttributes = ["unit_of_measurement", "value_template", "accept_errors", "default_value" ]
+
+    existingOutput = ""
+    if outfile and os.path.exists(outfile):
+        with open(outfile,"r") as inf:
+            existingOutput = inf.read()
 
     outf = sys.stdout
     if outfile:
@@ -31,6 +47,7 @@ def run(infile, outfile=None):
     with open(infile, "r") as inf:
         yamlFile = yaml.safe_load(inf)
 
+    outs = ""
     for host in yamlFile['snmp']:
         hostname = host['host']
         for item in host['items']:
@@ -40,7 +57,7 @@ def run(infile, outfile=None):
                 else:
                     oid = params['oid']
                 #print(f"\t{name:}, oid: {oid}")
-                outs = f"""
+                outs += f"""
 - platform: snmp
   host: {hostname}
   baseoid: {oid}
@@ -49,8 +66,10 @@ def run(infile, outfile=None):
 """
                 outs = outs + extractAttributes(params, itemAttributes)
                 outs = outs + extractAttributes(host, snmpAttributes)
-                outf.write(outs)
+    outf.write(outs)
     outf.close()
+    return (outs != existingOutput) and 1 or 0
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -59,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--outfile',help='If not provided, standard out is used')
     args = parser.parse_args()
 
-    run(args.infile, args.outfile)
+    sys.exit(run(args.infile, args.outfile))
 
 
 
