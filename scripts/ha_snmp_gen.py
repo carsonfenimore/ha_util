@@ -1,3 +1,4 @@
+#!/bin/python
 import argparse
 import sys
 import yaml
@@ -16,8 +17,7 @@ def extractAttributes(params, attributes):
                 val = val.lower()
                 if val == 'sha':
                     val = 'hmac-sha'
-            if att == 'version':
-                val = f"'{val}'"
+            val = f"'{val}'"
             out += f"  {att}: {val}\n"
     return out
 
