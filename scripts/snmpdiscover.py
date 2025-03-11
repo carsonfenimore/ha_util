@@ -1,3 +1,4 @@
+#!/bin/python
 import subprocess
 import re
 
@@ -40,6 +41,8 @@ def snmpLookup(host, hostAttributes, searchoid, search, baseoid):
         oid = match.group(1)
         oidtype = match.group(2)
         oidval = match.group(3)
+        if oidval[0] == '"':
+            oidval = oidval[1:-1] # strip quotes
         if oidval == search:
             lastoctet = oid.split(".")[-1]
             newoid = f"{baseoid}.{lastoctet}"
